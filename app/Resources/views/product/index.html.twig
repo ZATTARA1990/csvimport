@@ -7,10 +7,12 @@
         <thead>
             <tr>
                 <th>Id</th>
-                <th>Name</th>
+                <th>Productname</th>
                 <th>Price</th>
                 <th>Stock</th>
                 <th>Description</th>
+                <th>Discontinued</th>
+                <th>Discontinueddate</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -18,10 +20,12 @@
         {% for product in products %}
             <tr>
                 <td><a href="{{ path('product_show', { 'id': product.id }) }}">{{ product.id }}</a></td>
-                <td>{{ product.name }}</td>
+                <td>{{ product.productName }}</td>
                 <td>{{ product.price }}</td>
                 <td>{{ product.stock }}</td>
                 <td>{{ product.description }}</td>
+                <td>{{ product.discontinued }}</td>
+                <td>{% if product.discontinuedDate %}{{ product.discontinuedDate|date('Y-m-d H:i:s') }}{% endif %}</td>
                 <td>
                     <ul>
                         <li>

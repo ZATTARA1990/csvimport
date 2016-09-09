@@ -46,9 +46,6 @@ class CSVParsingCommand extends ContainerAwareCommand
         $count = $reader->count();
 
 
-        foreach ($reader as $row) {
-            $row;
-        }
 
         $workflow = new StepAggregator($reader);
 

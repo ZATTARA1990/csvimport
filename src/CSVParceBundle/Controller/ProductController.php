@@ -2,11 +2,16 @@
 
 namespace CSVParceBundle\Controller;
 
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
 use CSVParceBundle\Entity\Product;
 use CSVParceBundle\Form\ProductType;
+
+use FOS\RestBundle\Controller\Annotations as Rest;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use FOS\RestBundle\View\View as RView;
 
 /**
  * Product controller.
@@ -14,9 +19,9 @@ use CSVParceBundle\Form\ProductType;
  */
 class ProductController extends Controller
 {
+
     /**
-     * Lists all Product entities.
-     *
+     * @Rest\View
      */
     public function indexAction()
     {
@@ -24,105 +29,92 @@ class ProductController extends Controller
 
         $products = $em->getRepository('CSVParceBundle:Product')->findAll();
 
-        return  array(
+
+        return array(
             'products' => $products,
         );
+
     }
+
+
+    /**
+     * Finds and displays a Product entity.
+     *
+     * @Rest\View
+     */
+    public function showAction($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+
+        $product = $em->getRepository('CSVParceBundle:Product')->find($id);
+
+        if (!$product) {
+            throw new NotFoundHttpException('Unable to find product.');
+        }
+        return array('product' => $product);
+    }
+
 
     /**
      * Creates a new Product entity.
      *
      */
-    public function newAction(Request $request)
+    public function newAction()
     {
-        $product = new Product();
-        $form = $this->createForm('CSVParceBundle\Form\ProductType', $product);
-        $form->handleRequest($request);
+        return $this->processForm(new Product());
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $em = $this->getDoctrine()->getManager();
-            $em->persist($product);
-            $em->flush();
-
-            return $this->redirectToRoute('product_show', array('id' => $product->getId()));
-        }
-
-        return $this->render('product/new.html.twig', array(
-            'product' => $product,
-            'form' => $form->createView(),
-        ));
     }
 
-    /**
-     * Finds and displays a Product entity.
-     *
-     */
-    public function showAction(Product $product)
-    {
-        $deleteForm = $this->createDeleteForm($product);
-
-        return $this->render('product/show.html.twig', array(
-            'product' => $product,
-            'delete_form' => $deleteForm->createView(),
-        ));
-    }
 
     /**
      * Displays a form to edit an existing Product entity.
      *
      */
-    public function editAction(Request $request, Product $product)
+    public function editAction(Product $product)
     {
-        $deleteForm = $this->createDeleteForm($product);
-        $editForm = $this->createForm('CSVParceBundle\Form\ProductType', $product);
-        $editForm->handleRequest($request);
+        return $this->processForm($product);
+    }
 
-        if ($editForm->isSubmitted() && $editForm->isValid()) {
+    /**
+     * @Rest\View(statusCode=204)
+     */
+
+    public function deleteAction(Product $product)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $em->remove($product);
+        $em->flush();
+
+    }
+
+
+    private function processForm(Product $product)
+    {
+//        $statusCode = $product->isNew() ? 201 : 204;
+        $request = new Request();
+        $form = $this->createForm(new ProductType(), $product);
+        $form->bind($this->getRequest());
+
+//      if ($form->isValid()) {
+
             $em = $this->getDoctrine()->getManager();
             $em->persist($product);
             $em->flush();
 
-            return $this->redirectToRoute('product_edit', array('id' => $product->getId()));
-        }
+            $response = new Response();
+            $response->setStatusCode('201');
+            $response->headers->set('Location',
+                $this->generateUrl(
+                    'product_show', array('id' => $product->getId()), true
+                )
+            );
 
-        return $this->render('product/edit.html.twig', array(
-            'product' => $product,
-            'edit_form' => $editForm->createView(),
-            'delete_form' => $deleteForm->createView(),
-        ));
+            return $response;
+//        }
+//        return 'This her';
+//
+//        return RView::create($form, 400);
     }
 
-    /**
-     * Deletes a Product entity.
-     *
-     */
-    public function deleteAction(Request $request, Product $product)
-    {
-        $form = $this->createDeleteForm($product);
-        $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $em = $this->getDoctrine()->getManager();
-            $em->remove($product);
-            $em->flush();
-        }
-
-        return $this->redirectToRoute('product_index');
-    }
-
-    /**
-     * Creates a form to delete a Product entity.
-     *
-     * @param Product $product The Product entity
-     *
-     * @return \Symfony\Component\Form\Form The form
-     */
-    private function createDeleteForm(Product $product)
-    {
-        return $this->createFormBuilder()
-            ->setAction($this->generateUrl('product_delete', array('id' => $product->getId())))
-            ->setMethod('DELETE')
-            ->getForm()
-        ;
-    }
 }

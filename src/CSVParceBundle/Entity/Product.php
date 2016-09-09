@@ -3,6 +3,8 @@
 namespace CSVParceBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Mapping\ClassMetadata;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 /**
  * Product
@@ -12,6 +14,17 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Product
 {
+
+    public static function loadValidatorMetadata(ClassMetadata $metadata)
+    {
+        $metadata->addPropertyConstraint('productName', new NotBlank());
+        $metadata->addPropertyConstraint('price', new NotBlank());
+        $metadata->addPropertyConstraint('stock',  new NotBlank());
+        $metadata->addPropertyConstraint('description', new NotBlank());
+        $metadata->addPropertyConstraint('discontinued', new NotBlank());
+//       $metadata->addPropertyConstraint('discontinuedDate', new NotBlank());
+
+    }
     /**
      * @var int
      *
